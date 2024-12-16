@@ -5,7 +5,7 @@
     title: Installation
   - local: quickstart
     title: Quickstart
-  title: Getting started
+  title: Getting started?
 - sections:
   - local: dataset_formats
     title: Dataset Formats
