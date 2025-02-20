@@ -542,21 +542,26 @@ class GRPOTrainer(Trainer):
             all_prompts_text = gather_object(prompts_text)
             if self.accelerator.is_main_process:
                 outputs = self.llm.generate(all_prompts_text, sampling_params=self.sampling_params, use_tqdm=False)
+                print("outputs: ", outputs)
                 completion_ids = [out.token_ids for completions in outputs for out in completions.outputs]
+                print("completion_ids: ", completion_ids)
             else:
                 completion_ids = [None] * len(all_prompts_text)
             # Broadcast the completions from the main process to all processes, ensuring each process receives its
             # corresponding slice.
             completion_ids = broadcast_object_list(completion_ids, from_process=0)
+            print("completion_ids: ", completion_ids)
             process_slice = slice(
                 self.accelerator.process_index * len(prompts),
                 (self.accelerator.process_index + 1) * len(prompts),
             )
             completion_ids = completion_ids[process_slice]
-
+            print("completion_ids: ", completion_ids)
             # Pad the completions, and concatenate them with the prompts
             completion_ids = [torch.tensor(ids, device=device) for ids in completion_ids]
+            print("completion_ids: ", completion_ids)
             completion_ids = pad(completion_ids, padding_value=self.processing_class.pad_token_id)
+            print("completion_ids: ", completion_ids)
             prompt_completion_ids = torch.cat([prompt_ids, completion_ids], dim=1)
         else:
             # Regular generation path
