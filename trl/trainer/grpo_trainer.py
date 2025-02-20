@@ -545,6 +545,7 @@ class GRPOTrainer(Trainer):
                 print("outputs: ", outputs)
                 completion_ids = [out.token_ids for completions in outputs for out in completions.outputs]
                 print("completion_ids: ", completion_ids)
+                print("completion_ids type: ",type(completion_ids[0]))
             else:
                 completion_ids = [None] * len(all_prompts_text)
             # Broadcast the completions from the main process to all processes, ensuring each process receives its
