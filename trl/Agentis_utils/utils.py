@@ -228,7 +228,7 @@ def generate_agent_responses(
     tools_script_path: str = None,
     parsing_string: str = "<code>",
     stop_string: str = "</code>",
-    code_executer: E2BExecutor = None,
+    code_executer: LocalExecutor = None,
 ) -> list:
     """
     Generates responses for the agent with potential code execution.

@@ -540,13 +540,14 @@ class GRPOTrainer(Trainer):
 
             # Generate completions using vLLM: gather all prompts and use them in a single call in the main process
             all_prompts_text = gather_object(prompts_text)
-            print("all_prompts_text: ", all_prompts_text)
+            print("all_prompts_text: ", all_prompts_text[0])
             if self.accelerator.is_main_process:
                 outputs = self.llm.generate(all_prompts_text, sampling_params=self.sampling_params, use_tqdm=False)
-                print("outputs: ", outputs)
+                #print("outputs: ", outputs)
                 completion_ids = [out.token_ids for completions in outputs for out in completions.outputs]
-                print("completion_ids: ", completion_ids)
-                #print("completion_ids type: ",type(completion_ids[0]))
+                print("completion_ids [0]: ", completion_ids[0])
+                #printin the token decoded first value in completion_ids
+                print("completion_ids [0] decoded: ", self.processing_class.decode(completion_ids[0]))
             else:
                 completion_ids = [None] * len(all_prompts_text)
             # Broadcast the completions from the main process to all processes, ensuring each process receives its
