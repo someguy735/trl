@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from transformers import TrainingArguments
+from ..Agents_utils.utils import LocalExecutor
 
 
 @dataclass
@@ -199,6 +200,40 @@ class GRPOConfig(TrainingArguments):
             "help": "If set, the `max_model_len` to use for vLLM. This could be useful when running with reduced "
             "`vllm_gpu_memory_utilization`, leading to a reduced KV cache size. If not set, vLLM will use the model "
             "context size, which might be much larger than the KV cache, leading to inefficiencies."
+        },
+    )
+    # Parameters that control the agent behavior
+    use_agent: bool = field(
+        default=False,
+        metadata={
+            "help": "Whether to use an agent for code execution during generation. Only works when use_vllm=True."
+        },
+    )
+    tools_script_path: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": "Path to a Python script containing tool definitions that will be made available to the E2B agent "
+            "for code execution."
+        },
+    )
+    parsing_string: str = field(
+        default="<code>",
+        metadata={
+            "help": "String used to identify the beginning of code blocks in the agent's responses that should be "
+            "executed."
+        },
+    )
+    stop_string: str = field(
+        default="</code>",
+        metadata={
+            "help": "String that marks the end of code blocks in the agent's responses and triggers code execution."
+        },
+    )
+    code_executer = field(
+        default_factory=LocalExecutor(),
+        metadata={
+            "help": "The executor instance responsible for running code blocks identified by the agent. "
+            "Defaults to LocalExecutor instance."
         },
     )
 
