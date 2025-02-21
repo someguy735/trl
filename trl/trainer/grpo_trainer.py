@@ -319,6 +319,9 @@ class GRPOTrainer(Trainer):
 
         self.beta = args.beta
 
+        # maybe check for package before initializing
+        self.code_executer = code_executer
+
         # The trainer estimates the number of FLOPs (floating-point operations) using the number of elements in the
         # input tensor associated with the key "input_ids". However, in GRPO, the sampled data does not include the
         # "input_ids" key. Instead, the available keys is "prompt". As a result, the trainer issues the warning:
