@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from dataclasses import dataclass, field
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 
 from transformers import TrainingArguments
 from ..Agents_utils.utils import LocalExecutor, E2BExecutor
@@ -229,15 +229,6 @@ class GRPOConfig(TrainingArguments):
             "help": "String that marks the end of code blocks in the agent's responses and triggers code execution."
         },
     )
-    code_executer: Union[LocalExecutor, E2BExecutor] = field(
-        default_factory=LocalExecutor,
-        metadata={
-            "help": "The executor instance responsible for running code blocks identified by the agent. "
-            "Can be either LocalExecutor for local code execution or E2BExecutor for sandboxed execution. "
-            "Defaults to LocalExecutor instance."
-        },
-    )
-
     # Parameters that control the training
     learning_rate: float = field(
         default=1e-6,

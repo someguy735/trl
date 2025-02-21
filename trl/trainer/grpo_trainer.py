@@ -50,7 +50,7 @@ from .grpo_config import GRPOConfig
 from .utils import generate_model_card, get_comet_experiment_url, pad, selective_log_softmax
 
 # Add to imports at the top:
-from ..Agents_utils.utils import generate_agent_responses, LocalExecutor
+from ..Agents_utils.utils import generate_agent_responses, LocalExecutor,E2BExecutor
 
 
 if is_peft_available():
@@ -210,6 +210,7 @@ class GRPOTrainer(Trainer):
         callbacks: Optional[list[TrainerCallback]] = None,
         optimizers: tuple[Optional[torch.optim.Optimizer], Optional[torch.optim.lr_scheduler.LambdaLR]] = (None, None),
         peft_config: Optional["PeftConfig"] = None,
+        code_executer: Optional[Callable] = LocalExecutor(),
     ):
         # Args
         if args is None:
@@ -548,7 +549,7 @@ class GRPOTrainer(Trainer):
                     outputs = generate_agent_responses(llm=self.llm,
                                                        dataset=all_prompts_text,
                                                        sampling_params=self.sampling_params,
-                                                       code_executer=self.args.code_executer,
+                                                       code_executer=self.code_executer,
                                                        tools_script_path=self.args.tools_script_path,
                                                        parsing_string=self.args.parsing_string,
                                                        stop_string=self.args.stop_string)
