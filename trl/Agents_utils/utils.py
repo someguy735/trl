@@ -288,14 +288,14 @@ def generate_agent_responses(
 
 
 # example usage of prepare_data_for_agent
-dataset_prompt_only = [
-    "What is the capital of France?",
-    "What is the square root of 16?",]
+#dataset_prompt_only = [
+#    "What is the capital of France?",#
+#    "What is the square root of 16?",]
 # same dataset as above but in conversational format
-dataset_conversational = [
-    [{"role": "user", "content": "What is the capital of France?"}],
-    [{"role": "user", "content": "What is the square root of 16?"}],
-]
+#dataset_conversational = [
+#    [{"role": "user", "content": "What is the capital of France?"}],
+#    [{"role": "user", "content": "What is the square root of 16?"}],
+#]
 # import and intialize tokenizer
 #from transformers import AutoTokenizer
 #tokenizer = AutoTokenizer.from_pretrained("unsloth/Llama-3.2-1B-Instruct")
@@ -319,8 +319,8 @@ dataset_conversational = [
 
 
 #executer = E2BExecutor(api_key="e2b_9f17248b4c30dac21400e155f031824e180e5a09")
-executer = LocalExecutor()
-result = executer.execute("2+2")
-print(result)
-print(type(result))
+#executer = LocalExecutor()
+#result = executer.execute("2+2")
+#print(result)
+#print(type(result))
 #print(executer.execute("print(2+2)"))

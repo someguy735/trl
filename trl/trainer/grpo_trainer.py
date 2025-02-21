@@ -554,6 +554,8 @@ class GRPOTrainer(Trainer):
                                                        stop_string=self.args.stop_string)
                     # parsing and tokenizing the completion since outputs with use_agent is the full chat
                     completion_ids = [tuple(self.processing_class.encode(output[len(prompt):].strip(), add_special_tokens=False))for prompt, output in zip(all_prompts_text, outputs)]
+                    print("completion_ids with agent",completion_ids
+                    )
                 else:
                     outputs = self.llm.generate(all_prompts_text, sampling_params=self.sampling_params, use_tqdm=False)
                     completion_ids = [out.token_ids for completions in outputs for out in completions.outputs]
