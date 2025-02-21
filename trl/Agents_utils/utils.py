@@ -103,90 +103,86 @@ class LocalExecutor:
             return f"Error executing code: {str(e)}"
 
 def prepare_data_for_e2b_agent(
-    dataset: Union[List[List[dict]], List[str]], 
+    dataset,  
     tokenizer,
+    prompt_column: str = "prompt",  
     system_prompt: str = default_system_prompt, 
     environment_prompt: str = default_environment_prompt,
-    tools_script_path: str = None, 
+    tools_script_path: str = None,
 ) -> list:
     """
-    Prepares the dataset for the agent by constructing conversations and applying the system prompt.
-
-    This function handles two types of datasets:
-      1. Conversational data (List[List[dict]]): each conversation is a list of message dictionaries.
-      2. Prompt-only data (List[str]): each string will be converted into a conversation containing a single user message.
-
-    If a tools script path is provided, the content of the script is read and appended to the system prompt
-    along with an environment prompt.
+    Prepares the Hugging Face dataset for the e2b agent by constructing conversations 
+    and applying the system prompt.
 
     Args:
-        dataset (Union[List[List[dict]], List[str]]): The input dataset, either conversational (list of list of dict)
-            or as prompt-only strings (list of str).
-        tokenizer: A tokenizer with an `apply_chat_template` method to process conversations.
-        system_prompt (str, optional): The base system prompt. Defaults to `default_system_prompt`.
-        environment_prompt (str, optional): Description to prepend before the tools script. Defaults to `default_user_script_prompt`.
-        tools_script_path (str, optional): File path to a tools script to include in the system prompt. Defaults to None.
+        dataset: A Hugging Face dataset object
+        tokenizer: A tokenizer with an `apply_chat_template` method to process conversations
+        prompt_column (str): Name of the column containing prompts. Defaults to "prompt"
+        system_prompt (str, optional): The base system prompt. Defaults to default_system_prompt
+        environment_prompt (str, optional): Description to prepend before the tools script
+        tools_script_path (str, optional): File path to a tools script to include in system prompt
 
     Returns:
-        list: Processed prompts with the system message prepended and formatted by the tokenzier's chat template.
+        Dataset: Modified dataset with processed prompts in the prompt column
     """
-    # Convert prompt-only dataset (list of strings) to conversational format.
-    if dataset and isinstance(dataset[0], str):
-        conversations = [[{"role": "user", "content": prompt}] for prompt in dataset]
-    else:
-        conversations = dataset
+    # Convert dataset prompts to conversational format
+    conversations = [[{"role": "user", "content": prompt}] for prompt in dataset[prompt_column]]
 
-    # If a tools script path is provided, read its content and append with the environment prompt.
+    # If a tools script path is provided, read its content and append with the environment prompt
     if tools_script_path:
         try:
             tool_script = read_script(tools_script_path)
+            system_prompt += "\n" + environment_prompt + "\n" + tool_script
         except Exception as e:
             raise RuntimeError(f"Error reading the tools script: {e}")
-        system_prompt += "\n" + environment_prompt + "\n" + tool_script
 
-    # Create the system prompt message.
+    # Create the system prompt message
     system_message = {"role": "system", "content": system_prompt}
 
-    # Prepend the system message to each conversation, avoiding duplication.
+    # Prepend the system message to each conversation
     for convo in conversations:
         if not convo or convo[0].get("role") != "system":
             convo.insert(0, system_message)
 
-    # Apply the tokenizer's chat template to each conversation.
+    # Apply the tokenizer's chat template
     processed_prompts = tokenizer.apply_chat_template(
-        conversations, 
-        tokenize=False,  
+        conversations,
+        tokenize=False,
         add_generation_prompt=True
     )
-    return processed_prompts
+
+    # Create a new dataset with processed prompts
+    return dataset.map(
+        lambda x, idx: {prompt_column: processed_prompts[idx]},
+        with_indices=True
+    )
 
 
 def prepare_data_for_local_agent(
-    dataset: Union[List[List[dict]], List[str]],
+    dataset,  
     tokenizer,
+    prompt_column: str = "prompt",  
     system_prompt: str = default_system_prompt,
     tools: List[Callable] = None,
     include_source_code: bool = True,
 ) -> list:
     """
-    Prepares the dataset for the local agent by constructing conversations and applying the system prompt.
-    Similar to prepare_data_for_e2b_agent but works with a list of callable tools instead of a script file.
+    Prepares the Hugging Face dataset for the local agent by constructing conversations 
+    and applying the system prompt.
 
     Args:
-        dataset (Union[List[List[dict]], List[str]]): The input dataset, either conversational or prompt-only strings
+        dataset: A Hugging Face dataset object
         tokenizer: A tokenizer with an `apply_chat_template` method to process conversations
+        prompt_column (str): Name of the column containing prompts. Defaults to "prompt"
         system_prompt (str, optional): The base system prompt. Defaults to default_system_prompt
         tools (List[Callable], optional): List of callable functions to include in system prompt
         include_source_code (bool, optional): If True, includes source code of tools, else includes docstrings
 
     Returns:
-        list: Processed prompts with the system message prepended and formatted by the tokenizer's chat template
+        Dataset: Modified dataset with processed prompts in the prompt column
     """
-    # Convert prompt-only dataset to conversational format
-    if dataset and isinstance(dataset[0], str):
-        conversations = [[{"role": "user", "content": prompt}] for prompt in dataset]
-    else:
-        conversations = dataset
+    # Convert dataset prompts to conversational format
+    conversations = [[{"role": "user", "content": prompt}] for prompt in dataset[prompt_column]]
 
     # Process tools if provided
     if tools:
@@ -218,8 +214,12 @@ def prepare_data_for_local_agent(
         tokenize=False,
         add_generation_prompt=True
     )
-    return processed_prompts
 
+    # Create a new dataset with processed prompts
+    return dataset.map(
+        lambda x, idx: {prompt_column: processed_prompts[idx]},
+        with_indices=True
+    )
 
 def generate_agent_responses(
     dataset: list,
@@ -285,42 +285,11 @@ def generate_agent_responses(
 
     return completed_chats
 
-
-
-# example usage of prepare_data_for_agent
-#dataset_prompt_only = [
-#    "What is the capital of France?",#
-#    "What is the square root of 16?",]
-# same dataset as above but in conversational format
-#dataset_conversational = [
-#    [{"role": "user", "content": "What is the capital of France?"}],
-#    [{"role": "user", "content": "What is the square root of 16?"}],
-#]
-# import and intialize tokenizer
+# load tokenizer
 #from transformers import AutoTokenizer
-#tokenizer = AutoTokenizer.from_pretrained("unsloth/Llama-3.2-1B-Instruct")
-
-#processed_prompts = prepare_data_for_e2b_agent(
-    #dataset,
-    #tokenizer,
-    #system_prompt="yo whats good bruh",
-    #environment_prompt="do whatever you want with this code",
-    #tools_script_path="/workspaces/trl/tools_script.py",
-#)
-
-
-#import sys
-#from pathlib import Path
-#sys.path.append(str(Path(__file__).parent.parent.parent))
-#from tools_script import search_duckduckgo, search_duckduckgo_without_docs
-#processed_prompts = prepare_data_for_local_agent(dataset=dataset_conversational,tokenizer=tokenizer,tools=[search_duckduckgo,search_duckduckgo_without_docs],include_source_code=False)
-
-#print(processed_prompts[0])
-
-
-#executer = E2BExecutor(api_key="e2b_9f17248b4c30dac21400e155f031824e180e5a09")
-#executer = LocalExecutor()
-#result = executer.execute("2+2")
-#print(result)
-#print(type(result))
-#print(executer.execute("print(2+2)"))
+#tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2-0.5B-Instruct")
+#from datasets import load_dataset
+#dataset = load_dataset("August4293/agent_math_dataset",split="train")
+#prepared_data = prepare_data_for_e2b_agent(dataset,tokenizer,tools_script_path="/workspaces/trl/tools_script.py")
+#print(prepared_data)
+#print(prepared_data["prompt"][0])
