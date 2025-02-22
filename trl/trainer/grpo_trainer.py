@@ -556,6 +556,7 @@ class GRPOTrainer(Trainer):
                                                        tools_script_path=self.args.tools_script_path,
                                                        parsing_string=self.args.parsing_string,
                                                        stop_string=self.args.stop_string)
+                    print("outputs with agent",outputs)
                     # parsing and tokenizing the completion since outputs with use_agent is the full chat
                     completion_ids = [tuple(self.processing_class.encode(output[len(prompt):].strip(), add_special_tokens=False))for prompt, output in zip(all_prompts_text, outputs)]
                     #print("completion_ids with agent",completion_ids)
