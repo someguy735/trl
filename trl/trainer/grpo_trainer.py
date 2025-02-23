@@ -381,7 +381,7 @@ class GRPOTrainer(Trainer):
                     "vLLM is not available and `use_vllm` is set to True. Please install vLLM with "
                     "`pip install vllm` to use it."
                 )
-            if self.use_agent:
+            if self.args.use_agent:
                 if not is_agents_available():
                     raise ImportError(
                         "Agents utilities are not available and `use_agent` is set to True. Please install trl with "
