@@ -1,9 +1,17 @@
-from e2b_code_interpreter import Sandbox
-from pathlib import Path
-from typing import Optional, List, Union, Callable
-from inspect import getsource
-from vllm import LLM,SamplingParams
-from langchain_experimental.utilities import PythonREPL
+from ..import_utils import is_agents_available
+
+if is_agents_available():
+    from e2b_code_interpreter import Sandbox
+    from pathlib import Path
+    from typing import Optional, List, Callable
+    from inspect import getsource
+    from vllm import LLM,SamplingParams
+    from langchain_experimental.utilities import PythonREPL
+else:
+    raise ImportError(
+    "Agents utilities are not available and. Please install trl with "
+    "`pip install trl[agents]` to use utils"
+)
 
 default_system_prompt = "You can answer questions and solve problems. If running code helps, write it inside <code> </code>, and you will see the result. Example: To calculate 2 + 2, write <code> print(2 + 2) </code>."
 
