@@ -259,7 +259,7 @@ def generate_agent_responses(
 
     while current_batch:
         # Generate outputs for the current batch.
-        outputs = llm.generate(current_batch, sampling_params)
+        outputs = llm.generate(current_batch, sampling_params,use_tqdm=False)
         next_batch = []  # To store chats that still need code execution.
 
         # Process each output in the batch.
@@ -284,12 +284,3 @@ def generate_agent_responses(
         current_batch = next_batch
 
     return completed_chats
-
-# load tokenizer
-#from transformers import AutoTokenizer
-#tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2-0.5B-Instruct")
-#from datasets import load_dataset
-#dataset = load_dataset("August4293/agent_math_dataset",split="train")
-#prepared_data = prepare_data_for_e2b_agent(dataset,tokenizer,tools_script_path="/workspaces/trl/tools_script.py")
-#print(prepared_data)
-#print(prepared_data["prompt"][0])

@@ -43,14 +43,12 @@ from transformers.integrations.deepspeed import is_deepspeed_zero3_enabled
 from transformers.utils import is_peft_available
 
 from ..data_utils import apply_chat_template, is_conversational, maybe_apply_chat_template
-from ..import_utils import is_vllm_available
+from ..import_utils import is_vllm_available, is_agents_available
 from ..models import create_reference_model, prepare_deepspeed, unwrap_model_for_generation
 from .callbacks import SyncRefModelCallback
 from .grpo_config import GRPOConfig
 from .utils import generate_model_card, get_comet_experiment_url, pad, selective_log_softmax
 
-# Add to imports at the top:
-from ..Agents_utils.utils import generate_agent_responses, LocalExecutor,E2BExecutor
 
 
 if is_peft_available():
@@ -61,6 +59,9 @@ if is_vllm_available():
 
 if is_wandb_available():
     import wandb
+
+if is_agents_available():
+    from ..Agents_utils.utils import generate_agent_responses,LocalExecutor
 
 # What we call a reward function is a callable that takes a list of prompts and completions and returns a list of
 # rewards. When it's a string, it's a model ID, so it's loaded as a pretrained model.
@@ -210,7 +211,7 @@ class GRPOTrainer(Trainer):
         callbacks: Optional[list[TrainerCallback]] = None,
         optimizers: tuple[Optional[torch.optim.Optimizer], Optional[torch.optim.lr_scheduler.LambdaLR]] = (None, None),
         peft_config: Optional["PeftConfig"] = None,
-        code_executer: Optional[Callable] = LocalExecutor(),
+        code_executer: Optional[Callable] = None,
     ):
         # Args
         if args is None:
@@ -318,9 +319,13 @@ class GRPOTrainer(Trainer):
         self.use_vllm = args.use_vllm
 
         self.beta = args.beta
-
-        # maybe check for package before initializing
-        self.code_executer = code_executer
+        
+        # set code executer to LocalExecuter if available and undefined
+        if code_executer is None and is_agents_available():
+            self.code_executer = LocalExecutor()
+        else:
+            self.code_executer = code_executer
+        
 
         # The trainer estimates the number of FLOPs (floating-point operations) using the number of elements in the
         # input tensor associated with the key "input_ids". However, in GRPO, the sampled data does not include the
@@ -376,6 +381,12 @@ class GRPOTrainer(Trainer):
                     "vLLM is not available and `use_vllm` is set to True. Please install vLLM with "
                     "`pip install vllm` to use it."
                 )
+            if self.use_agent:
+                if not is_agents_available():
+                    raise ImportError(
+                        "Agents utilities are not available and `use_agent` is set to True. Please install trl with "
+                        "`pip install trl[agents]` to use it."
+                    )
 
             if self.accelerator.is_main_process:
                 vllm_device = self.args.vllm_device
