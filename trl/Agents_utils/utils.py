@@ -9,7 +9,7 @@ if is_agents_available():
     from langchain_experimental.utilities import PythonREPL
 else:
     raise ImportError(
-    "Agents utilities are not available and. Please install trl with "
+    "Agents utilities are not available. Please install trl with "
     "`pip install trl[agents]` to use utils"
 )
 
